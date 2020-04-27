@@ -38,12 +38,12 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
       type="text"
       placeholder={placeholder}
       className={styles.input}
-      value={currentValue || value}
+      value={currentValue !== null && currentValue !== undefined ? currentValue : value}
       onChange={handleChange}
       onKeyUp={({ key }) => {
         if (key === ENTER) {
-          handleEnter(currentValue || value);
-          setValue(currentValue || initialValue);
+          handleEnter(currentValue !== null && currentValue !== undefined ? currentValue : value);
+          setValue(currentValue !== null && currentValue !== undefined ? currentValue : initialValue);
         }
       }}
     />

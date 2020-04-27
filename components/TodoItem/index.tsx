@@ -34,9 +34,16 @@ const TodoItem = ({ id, title, done, handleDelete, handleUpdate }) => {
   };
   const del = () => handleDelete(id);
   const update = (value) => {
-    setTitle(value);
+    const title = value.trim();
+
+    if (title) {
+      setTitle(title);
+      handleUpdate({ id, title });
+    } else {
+      del();
+    }
+
     setUpdating(false);
-    handleUpdate({ id, title: value });
   };
   const startUpdating = () => {
     setUpdating(true)
