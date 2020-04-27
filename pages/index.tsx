@@ -63,7 +63,7 @@ const Index = () => {
               id={id}
               title={title}
               done={done}
-              handleToggle={Todo.updateTodo}
+              handleUpdate={Todo.updateTodo}
               handleDelete={handleDelete}
             />
           )) || null

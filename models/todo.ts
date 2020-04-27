@@ -29,9 +29,9 @@ export default class Todo {
     }
   }
 
-  public static async updateTodo({ id, done }: { id: string; done: boolean }) {
+public static async updateTodo({ id, title, done }: { id: string; title?: string, done?: boolean }) {
     try {
-      const { data } = await axios.patch(`/api/todo/${id}`, { done });
+      const { data } = await axios.patch(`/api/todo/${id}`, { title, done });
 
       return data;
     } catch (err) {
