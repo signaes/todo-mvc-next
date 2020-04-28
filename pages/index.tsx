@@ -5,78 +5,85 @@ import TodoInput from '../components/TodoInput'
 import TodoItem from '../components/TodoItem'
 import Todo, { TodoInterface } from '../models/todo'
 import todosMachine, {
-  todosMachineLoadingEvents,
-  // todosMachineReadyEvents,
-  todosMachineReadyCreatingEvents,
+  resolveVisible,
 } from '../state/machines/todos'
 
 
 const Index = () => {
-  const [ loading, setLoading ] = useState(true);
-  const [ todos, setTodos ] = useState([]);
-  const [ error, setError ] = useState(null);
-
   const [ current, send ] = useMachine(todosMachine);
 
   useEffect(() => {
     (async function getData() {
+      send('FETCH')
+
       try {
-        const data = await Todo.getTodos();
-        setTodos(data);
-        setLoading(false);
-        send(todosMachineLoadingEvents.LOADED, { data });
+        const todos = await Todo.all();
+        send('RESOLVE', { todos });
       } catch (err) {
         console.error(err);
-        setError(err);
-        setLoading(false);
-        send(todosMachineLoadingEvents.FAILED, { error: err });
+        send('REJECT', { error: err });
       }
     }());
   }, []);
 
-  const { context: { visibleData } } = current;
+  const { context: { todos, visibility } } = current;
+
+  const visibleTodos = resolveVisible(visibility, todos);
 
   console.log('current.value', current.value)
   console.log('current.context', current.context)
 
-  const handleEnter = async (value: string) => {
-    const cleanValue = value.trim();
-    // send(todosMachineReadyEvents.LOAD);
-    setLoading(true);
+  const handleEnter = async (title: string) => {
+    const cleanValue = title.trim();
 
     if (!cleanValue) {
-      setLoading(false);
       return;
     }
 
-    try {
-      // send('LOADED')
-      const newTodo = await Todo.newTodo(value);
-      console.log('newTodo', newTodo)
-      send(todosMachineReadyCreatingEvents.CREATED, { data: newTodo });
-      setLoading(false);
-    } catch (err) {
-      send(todosMachineLoadingEvents.FAILED, { error: err });
-      setLoading(false);
-    }
+    const todo = new Todo(title);
 
-    // if (cleanValue) {
-    //   const todosList = await Todo.newTodo(value);
-    //   setTodos(todosList);
-    //   setLoading(false);
-    // }
-  }
+    send('ADD', { todo });
+
+    try {
+      const todo = await Todo.add(title);
+      send('SUCCESS');
+    } catch (err) {
+      send('FAIL', { error: err });
+    }
+  };
 
   const handleDelete = async (id: string) => {
-    setTodos(todos.filter((todo: TodoInterface) => todo.id !== id));
+    send('REMOVE', { id });
 
     try {
-      await Todo.deleteTodo(id);
+      await Todo.destroy(id);
+      send('SUCCESS');
     } catch (err) {
       console.error(err);
-      setError(err);
+      send('FAIL', { error: err });
     }
-  }
+  };
+
+  const handleUpdate = async ({ id, title, complete }) => {
+    send('UPDATE', { id, title, complete });
+
+    try {
+      await Todo.update({ id, title, complete });
+      send('SUCCESS');
+    } catch (err) {
+      console.error(err);
+      send('FAIL', { error: err });
+    }
+  };
+
+  const handleVisibility = (type) => () => {
+    send(`SHOW.${type}`);
+    send('SUCCESS');
+  };
+
+  const showAll = handleVisibility('ALL');
+  const showActive = handleVisibility('ACTIVE');
+  const showComplete = handleVisibility('COMPLETE');
 
   return (
     <>
@@ -89,16 +96,43 @@ const Index = () => {
         <TodoInput onEnter={handleEnter} />
         { current.matches('loading') && 'Loading' }
         { current.matches('failure') && 'Something went wrong' }
-        { current.matches('complete') && visibleData.map(({ id, title, complete }: TodoInterface, idx) => (
-            <TodoItem
-              key={id}
-              id={id}
-              title={title}
-              complete={complete}
-              handleUpdate={Todo.updateTodo}
-              handleDelete={handleDelete}
-            />
-          )) }
+        { current.matches('success') && (
+          <div>
+            {
+              visibleTodos.map(({ id, title, complete }: TodoInterface, idx) => (
+                <TodoItem
+                  key={id}
+                  id={id}
+                  title={title}
+                  complete={complete}
+                  handleFocus={() => send('UPDATE.START')}
+                  handleUpdate={handleUpdate}
+                  handleDelete={handleDelete}
+                />
+              ))
+            }
+            <div>
+              <button
+                onClick={showAll}
+                disabled={!current.matches('success.idle')}
+              >
+                Show all
+              </button>
+              <button
+                onClick={showActive}
+                disabled={!current.matches('success.idle')}
+              >
+                Show active
+              </button>
+              <button
+                onClick={showComplete}
+                disabled={!current.matches('success.idle')}
+              >
+                Show complete
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </>

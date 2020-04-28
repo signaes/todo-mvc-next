@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { v4 as uuid } from 'uuid';
 
 export interface TodoInterface {
   id: string;
@@ -7,7 +8,14 @@ export interface TodoInterface {
 }
 
 export default class Todo {
-  public static async getTodos() {
+  public id
+  public complete = false;
+
+  constructor(public title) {
+    this.id = uuid();
+  }
+
+  public static async all() {
     try {
       const { data } = await axios.get('/api/todos');
 
@@ -18,7 +26,7 @@ export default class Todo {
     }
   }
 
-  public static async newTodo(title: string) {
+  public static async add(title: string) {
     try {
       const { data } = await axios.post('/api/todos', { title });
 
@@ -29,7 +37,7 @@ export default class Todo {
     }
   }
 
-public static async updateTodo({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
+public static async update({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
     try {
       const { data } = await axios.patch(`/api/todo/${id}`, { title, complete });
 
@@ -40,7 +48,7 @@ public static async updateTodo({ id, title, complete }: { id: string; title?: st
     }
   }
 
-  public static async deleteTodo(id: string) {
+  public static async destroy(id: string) {
     try {
       const { data } = await axios.delete(`/api/todo/${id}`);
 

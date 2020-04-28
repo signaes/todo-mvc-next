@@ -23,7 +23,8 @@ const todoMachine = ({ id, complete }: { id: string; complete: boolean }) => Mac
   }
 });
 
-const TodoItem = ({ id, title, complete, handleDelete, handleUpdate }) => {
+const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus }) => {
+  const [ initialTitle, setInitialTitle ] = useState(title);
   const [ currentTitle, setTitle ] = useState(title);
   const [ state, send ] = useMachine(todoMachine({ id, complete }));
   const [ updating, setUpdating ] = useState(false);
@@ -37,6 +38,7 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate }) => {
     const title = value.trim();
 
     if (title) {
+      setInitialTitle(title);
       setTitle(title);
       handleUpdate({ id, title });
     } else {
@@ -53,6 +55,10 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate }) => {
     }
   };
   const handleChange = value => setTitle(value);
+  const handleEsc = () => {
+    setTitle(initialTitle);
+    setUpdating(false);
+  }
 
   return (
     <div>
@@ -73,8 +79,10 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate }) => {
           <TodoInput
             initialValue={currentTitle}
             currentValue={currentTitle}
+            onFocus={handleFocus}
             onChange={handleChange}
             onEnter={update}
+            onEsc={handleEsc}
             ref={inputRef}
           />
         </div>

@@ -3,10 +3,11 @@ import { v4 as uuid } from 'uuid';
 import { TodoInterface } from '../../models/todo';
 import { DATA_FILE_PATH, REQUEST_METHOD } from '../../constants';
 import { readFile, writeFile, message } from '../../utils';
+import { getTodos, addNewTodo } from '../../services/todos';
 
 const get = async (res: NextApiResponse<string>) => {
   try {
-    const data = await readFile(DATA_FILE_PATH);
+    const data = await getTodos();
 
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(data);
@@ -24,11 +25,7 @@ const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface>) =>
   }
 
   try {
-    const data = await readFile(DATA_FILE_PATH);
-    const newData: TodoInterface[] = JSON.parse(data);
-    const newTodo = { id: uuid(), title, complete: false };
-    newData.push(newTodo);
-    await writeFile(DATA_FILE_PATH, JSON.stringify(newData));
+    const newTodo = await addNewTodo(title);
 
     res.setHeader('Content-Type', 'application/json');
     res.status(201).json(newTodo);

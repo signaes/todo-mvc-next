@@ -3,11 +3,17 @@ import process from 'process';
 
 export const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'todos.json');
 
-export const ENTER = 'Enter';
+/*
+ * Keyboard keys
+ */
+export const KEYS = {
+  ENTER: 'Enter',
+  ESC: 'Escape'
+};
 
-/**
-  * HTTP Request methods
-  */
+/*
+ * HTTP Request methods
+*/
 
 export const REQUEST_METHOD = {
   GET: 'GET',
