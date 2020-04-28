@@ -2,12 +2,12 @@ import styles from './styles.module.css';
 import { useState, useEffect } from 'react'
 import { useMachine } from '@xstate/react'
 import Head from 'next/head'
-import TodoInput from '../components/TodoInput'
-import TodoItem from '../components/TodoItem'
-import Todo, { TodoInterface } from '../models/todo'
+import TodoInput from '../../components/TodoInput'
+import TodoItem from '../../components/TodoItem'
+import Todo, { TodoInterface } from '../../models/todo'
 import todosMachine, {
   resolveVisible,
-} from '../state/machines/todos'
+} from '../../state/machines/todos'
 
 
 const Index = () => {
