@@ -1,3 +1,4 @@
+import styles from './styles.module.css';
 import { useState, useEffect } from 'react'
 import { useMachine } from '@xstate/react'
 import Head from 'next/head'
@@ -29,9 +30,6 @@ const Index = () => {
   const { context: { todos, visibility } } = current;
 
   const visibleTodos = resolveVisible(visibility, todos);
-
-  console.log('current.value', current.value)
-  console.log('current.context', current.context)
 
   const handleEnter = async (title: string) => {
     const cleanValue = title.trim();
@@ -92,7 +90,7 @@ const Index = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div>
-        <h1>todo mvc</h1>
+        <h1>Todos</h1>
         <TodoInput onEnter={handleEnter} />
         { current.matches('loading') && 'Loading' }
         { current.matches('failure') && 'Something went wrong' }
