@@ -16,7 +16,7 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
     currentValue,
     onChange,
     onEnter: handleEnter,
-    placeholder = 'What needs to be done?',
+    placeholder = 'What needs to be complete?',
   } = props;
   const [value, setValue] = useState(initialValue);
 

@@ -16,7 +16,7 @@ const get = async (res: NextApiResponse<string>) => {
   }
 };
 
-const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface[]>) => {
+const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface>) => {
   const { body: { title } } = req;
 
   if (!title) {
@@ -26,11 +26,12 @@ const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface[]>) 
   try {
     const data = await readFile(DATA_FILE_PATH);
     const newData: TodoInterface[] = JSON.parse(data);
-    newData.push({ id: uuid(), title, done: false });
+    const newTodo = { id: uuid(), title, complete: false };
+    newData.push(newTodo);
     await writeFile(DATA_FILE_PATH, JSON.stringify(newData));
 
     res.setHeader('Content-Type', 'application/json');
-    res.status(201).json(newData);
+    res.status(201).json(newTodo);
   } catch (err) {
     console.error(err);
     res.status(500).end();

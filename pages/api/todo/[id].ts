@@ -3,7 +3,7 @@ import { TodoInterface } from '../../../models/todo';
 import { DATA_FILE_PATH, REQUEST_METHOD } from '../../../constants';
 import { readFile, writeFile, message } from '../../../utils';
 
-const patch = async ({ id, title, done }: { id: string, title?: string, done?: boolean }, res: NextApiResponse) => {
+const patch = async ({ id, title, complete }: { id: string, title?: string, complete?: boolean }, res: NextApiResponse) => {
   try {
     const data = await readFile(DATA_FILE_PATH);
     const newTitle = title && title.trim();
@@ -13,7 +13,7 @@ const patch = async ({ id, title, done }: { id: string, title?: string, done?: b
           return {
             ...item,
             title: newTitle ? newTitle : item.title,
-            done: done !== undefined && done !== null ? done : item.done
+            complete: complete !== undefined && complete !== null ? complete : item.complete
           }
         }
 
@@ -45,14 +45,14 @@ const del = async (id: string, res: NextApiResponse) => {
 export default (req: NextApiRequest, res: NextApiResponse) => {
   const {
     query: { id },
-    body: { title, done },
+    body: { title, complete },
     method
   } = req;
 
   switch (method) {
     case REQUEST_METHOD.PUT:
     case REQUEST_METHOD.PATCH:
-      patch({ id, title, done }, res);
+      patch({ id, title, complete }, res);
       break;
     case REQUEST_METHOD.DELETE:
       del(id, res);

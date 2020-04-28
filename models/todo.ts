@@ -3,7 +3,7 @@ import axios from 'axios';
 export interface TodoInterface {
   id: string;
   title: string;
-  done: boolean;
+  complete: boolean;
 }
 
 export default class Todo {
@@ -29,9 +29,9 @@ export default class Todo {
     }
   }
 
-public static async updateTodo({ id, title, done }: { id: string; title?: string, done?: boolean }) {
+public static async updateTodo({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
     try {
-      const { data } = await axios.patch(`/api/todo/${id}`, { title, done });
+      const { data } = await axios.patch(`/api/todo/${id}`, { title, complete });
 
       return data;
     } catch (err) {

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMachine } from '@xstate/react';
-import { Machine, StateValueMap } from 'xstate';
+import { Machine } from 'xstate';
 import TodoInput from '../TodoInput';
 
 type CompletionState = 'complete' | 'incomplete';
@@ -10,9 +10,9 @@ const INCOMPLETE: CompletionState = 'incomplete';
 
 const setDone: (state: string) => boolean = state => state === INCOMPLETE;
 
-const todoMachine = ({ id, done }: { id: string; done: boolean }) => Machine({
+const todoMachine = ({ id, complete }: { id: string; complete: boolean }) => Machine({
   id,
-  initial: done ? COMPLETE : INCOMPLETE,
+  initial: complete ? COMPLETE : INCOMPLETE,
   states: {
     incomplete: {
       on: { TOGGLE: COMPLETE }
@@ -23,14 +23,14 @@ const todoMachine = ({ id, done }: { id: string; done: boolean }) => Machine({
   }
 });
 
-const TodoItem = ({ id, title, done, handleDelete, handleUpdate }) => {
+const TodoItem = ({ id, title, complete, handleDelete, handleUpdate }) => {
   const [ currentTitle, setTitle ] = useState(title);
-  const [ state, send ] = useMachine(todoMachine({ id, done }));
+  const [ state, send ] = useMachine(todoMachine({ id, complete }));
   const [ updating, setUpdating ] = useState(false);
   const inputRef = useRef(null);
   const toggle = () => {
     send('TOGGLE');
-    handleUpdate({ id, done: setDone(state.value as string) });
+    handleUpdate({ id, complete: setDone(state.value as string) });
   };
   const del = () => handleDelete(id);
   const update = (value) => {
