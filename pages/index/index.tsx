@@ -27,7 +27,7 @@ const Index = () => {
     }());
   }, []);
 
-  const { context: { todos, visibility } } = current;
+  const { context: { todos, visibility, currentlyUpdatingId } } = current;
   const visibleTodos = resolveVisible(visibility, todos);
 
   const handleEnter = async (title: string) => {
@@ -157,6 +157,7 @@ const Index = () => {
                     onDelete={handleDelete}
                     onEsc={() => send('ABORT')}
                     isIdle={current.matches('success.idle')}
+                    isUpdating={currentlyUpdatingId === id}
                   />
                 ))
               }

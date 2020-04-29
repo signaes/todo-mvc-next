@@ -10,11 +10,21 @@ const TodoItem = ({
   onUpdate: handleUpdate,
   onEsc,
   onFocus: handleFocus,
-  isIdle
+  isIdle,
+  isUpdating
+}: {
+  id: string;
+  title: string;
+  complete: boolean;
+  onDelete: (id: string) => void;
+  onUpdate: (item: { id: string, title?: string, complete?: boolean }) => void;
+  onEsc: () => void;
+  onFocus: () => void;
+  isIdle: boolean;
+  isUpdating: boolean;
 }) => {
   const [ initialTitle, setInitialTitle ] = useState(title);
   const [ currentTitle, setTitle ] = useState(title);
-  const [ updating, setUpdating ] = useState(false);
   const inputRef = useRef(null);
 
   const toggle = () => {
@@ -31,15 +41,11 @@ const TodoItem = ({
     } else {
       del();
     }
-
-    setUpdating(false);
   };
-  const startUpdating = () => {
+  const startUpdating = e => {
     if (!isIdle) {
       return;
     }
-
-    setUpdating(true);
 
     if (inputRef && inputRef.current) {
       inputRef.current.focus();
@@ -48,32 +54,37 @@ const TodoItem = ({
   const handleChange = value => setTitle(value);
   const handleEsc = () => {
     setTitle(initialTitle);
-    setUpdating(false);
     onEsc();
   }
 
-  const checkboxContainerClassName = updating
+  const checkboxContainerClassName = isUpdating
     ? styles.completeCheckContainerDisabled
     : styles.completeCheckContainer
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+    >
       <div
         className={checkboxContainerClassName}
       >
         <input
           id={`completeCheck-${id}`}
           type="checkbox"
-          disabled={!isIdle}
+          disabled={!isIdle || isUpdating}
           onChange={toggle}
           checked={complete}
         />
         <label htmlFor={`completeCheck-${id}`} />
       </div>
-      <div className={styles.titleContainer} data-disabled={!updating && !isIdle}>
+      <div
+        onClick={startUpdating}
+        className={styles.titleContainer}
+        data-disabled={!isUpdating && !isIdle}
+      >
         <div className={styles.titleInputContainer} style={{
-          opacity: updating ? '100' : '0',
-          pointerEvents: updating ? 'all' : 'none'
+          opacity: isUpdating ? '100' : '0',
+          pointerEvents: isUpdating ? 'all' : 'none'
         }}>
           <TodoInput
             initialValue={currentTitle}
@@ -86,9 +97,9 @@ const TodoItem = ({
             ref={inputRef}
           />
         </div>
-        <div className={styles.titleTextContainer} onClick={startUpdating} style={{
-          opacity: updating ? '0' : '100',
-          pointerEvents: updating ? 'none' : 'all'
+        <div className={styles.titleTextContainer} style={{
+          opacity: isUpdating ? '0' : '100',
+          pointerEvents: isUpdating ? 'none' : 'all'
         }}>
           <span>{ currentTitle }</span>
         </div>

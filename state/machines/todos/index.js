@@ -23,6 +23,13 @@ const removeItemAction = (context, event) => {
   }
 }
 
+const clearCurrentlyUpdating = context => {
+  return {
+    ...context,
+    currentlyUpdatingId: null
+  }
+}
+
 const todosMachine = Machine({
   id: 'todos',
   initial: 'idle',
@@ -137,9 +144,18 @@ const todosMachine = Machine({
         },
         update: {
           on: {
-            'FAIL': 'idle',
-            'SUCCESS': 'idle',
-            'ABORT': 'idle',
+            'FAIL': {
+              target: 'idle',
+              actions: assign(clearCurrentlyUpdating)
+            },
+            'SUCCESS': {
+              target: 'idle',
+              actions: assign(clearCurrentlyUpdating)
+            },
+            'ABORT': {
+              target: 'idle',
+              actions: assign(clearCurrentlyUpdating)
+            },
             'REMOVE': {
               target: 'removeItem',
               actions: assign(removeItemAction)
