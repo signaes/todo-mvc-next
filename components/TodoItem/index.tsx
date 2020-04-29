@@ -82,6 +82,7 @@ const TodoItem = ({
             onChange={handleChange}
             onEnter={update}
             onEsc={handleEsc}
+            onBlur={handleEsc}
             ref={inputRef}
           />
         </div>

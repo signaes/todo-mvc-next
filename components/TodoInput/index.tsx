@@ -7,6 +7,7 @@ interface Input {
   currentValue?: string;
   onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
   onFocus?: () => void;
+  onBlur?: () => void;
   onEnter: (value: string) => void;
   onEsc?: () => void;
   placeholder?: string;
@@ -18,8 +19,9 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
     currentValue,
     onChange,
     onEnter: handleEnter,
-    onEsc: handleEsc,
-    onFocus: handleFocus,
+    onEsc: handleEsc = () => null,
+    onFocus: handleFocus = () => null,
+    onBlur: handleBlur = () => null,
     placeholder = 'What needs to be done?',
   } = props;
   const [value, setValue] = useState(initialValue);
@@ -44,11 +46,8 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
       className={styles.input}
       value={currentValue !== null && currentValue !== undefined ? currentValue : value}
       onChange={handleChange}
-      onFocus={() => {
-        if (typeof handleFocus === 'function') {
-          handleFocus();
-        }
-      }}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       onKeyUp={({ key }) => {
         switch (key) {
           case KEYS.ENTER:
@@ -56,9 +55,7 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
             setValue(currentValue !== null && currentValue !== undefined ? currentValue : initialValue);
             break;
           case KEYS.ESC:
-            if (typeof handleEsc === 'function') {
-              handleEsc();
-            }
+            handleEsc();
         }
       }}
     />
