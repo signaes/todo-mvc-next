@@ -137,7 +137,7 @@ const Index = () => {
                     Active
                   </button>
                   <button
-                    data-selected={visibility === 'SHOW.CURRENT'}
+                    data-selected={visibility === 'SHOW.COMPLETE'}
                     onClick={showComplete}
                     disabled={!current.matches('success.idle')}
                   >
