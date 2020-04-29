@@ -48,14 +48,15 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     body: { title, complete },
     method
   } = req;
+  const todoId: string = id as string;
 
   switch (method) {
     case REQUEST_METHOD.PUT:
     case REQUEST_METHOD.PATCH:
-      patch({ id, title, complete }, res);
+    patch({ id: todoId, title, complete }, res);
       break;
     case REQUEST_METHOD.DELETE:
-      del(id, res);
+      del(todoId, res);
       break;
     default:
       res.status(405).end(message.methodNotAllowed(req.method));
