@@ -2,7 +2,16 @@ import styles from './styles.module.scss';
 import { useState, useRef } from 'react';
 import TodoInput from '../TodoInput';
 
-const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus }) => {
+const TodoItem = ({
+  id,
+  title,
+  complete,
+  onDelete: handleDelete,
+  onUpdate: handleUpdate,
+  onEsc,
+  onFocus: handleFocus,
+  isIdle
+}) => {
   const [ initialTitle, setInitialTitle ] = useState(title);
   const [ currentTitle, setTitle ] = useState(title);
   const [ updating, setUpdating ] = useState(false);
@@ -26,7 +35,11 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
     setUpdating(false);
   };
   const startUpdating = () => {
-    setUpdating(true)
+    if (!isIdle) {
+      return;
+    }
+
+    setUpdating(true);
 
     if (inputRef && inputRef.current) {
       inputRef.current.focus();
@@ -36,15 +49,28 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
   const handleEsc = () => {
     setTitle(initialTitle);
     setUpdating(false);
+    onEsc();
   }
+
+  const checkboxContainerClassName = updating
+    ? styles.completeCheckContainerDisabled
+    : styles.completeCheckContainer
 
   return (
     <div className={styles.container}>
-      <div className={styles.completeCheckContainer}>
-        <input id={`completeCheck-${id}`} type="checkbox" onChange={toggle} checked={complete} />
+      <div
+        className={checkboxContainerClassName}
+      >
+        <input
+          id={`completeCheck-${id}`}
+          type="checkbox"
+          disabled={!isIdle}
+          onChange={toggle}
+          checked={complete}
+        />
         <label htmlFor={`completeCheck-${id}`} />
       </div>
-      <div className={styles.titleContainer}>
+      <div className={styles.titleContainer} data-disabled={!updating && !isIdle}>
         <div className={styles.titleInputContainer} style={{
           opacity: updating ? '100' : '0',
           pointerEvents: updating ? 'all' : 'none'
@@ -66,7 +92,7 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
           <span>{ currentTitle }</span>
         </div>
       </div>
-      <button className={styles.destroyButton} onClick={del}>
+      <button className={styles.destroyButton} onClick={del} disabled={!isIdle}>
         ×
       </button>
     </div>

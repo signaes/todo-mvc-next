@@ -78,6 +78,14 @@
     &[data-selected="true"] {
       border-color: rgba(175, 47, 47, 0.2);
     }
+
+    &[disabled] {
+      opacity: .5;
+
+      &:not([data-selected="true"]):hover {
+        border-color: #fff;
+      }
+    }
   }
 
   &:before {

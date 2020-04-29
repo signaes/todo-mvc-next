@@ -31,7 +31,8 @@ const todosMachine = Machine({
     todos: [],
     // states: 'SHOW.ALL', 'SHOW.ACTIVE', 'SHOW.COMPLETE'
     visibility: 'SHOW.ALL',
-    error: null
+    error: null,
+    currentlyUpdatingId: null
   },
   states: {
     idle: {
@@ -84,7 +85,15 @@ const todosMachine = Machine({
               target: 'removeItem',
               actions: assign(removeItemAction)
             },
-            'UPDATE.START': 'update',
+            'UPDATE.START': {
+              target: 'update',
+              actions: assign((context, event) => {
+                return {
+                  ...context,
+                  currentlyUpdatingId: event.id || null
+                }
+              })
+            },
             'SHOW.ALL': {
               target: 'showAll',
               actions: assign(context => {
@@ -130,6 +139,7 @@ const todosMachine = Machine({
           on: {
             'FAIL': 'idle',
             'SUCCESS': 'idle',
+            'ABORT': 'idle',
             'REMOVE': {
               target: 'removeItem',
               actions: assign(removeItemAction)
@@ -147,7 +157,8 @@ const todosMachine = Machine({
 
                 return {
                   ...context,
-                  todos: context.todos.map(update)
+                  todos: context.todos.map(update),
+                  currentlyUpdatingId: null
                 }
               })
             },

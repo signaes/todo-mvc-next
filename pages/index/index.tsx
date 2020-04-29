@@ -27,7 +27,7 @@ const Index = () => {
     }());
   }, []);
 
-  const { context: { todos, visibility } } = current;
+  const { context: { todos, visibility, currentlyUpdatingId } } = current;
   const visibleTodos = resolveVisible(visibility, todos);
 
   const handleEnter = async (title: string) => {
@@ -62,7 +62,7 @@ const Index = () => {
   };
 
   const handleUpdate = async ({ id, title, complete }) => {
-    send('UPDATE.START');
+    send('UPDATE.START', { id });
     send('UPDATE', { id, title, complete });
 
     try {
@@ -152,9 +152,11 @@ const Index = () => {
                     id={id}
                     title={title}
                     complete={complete}
-                    handleFocus={() => send('UPDATE.START')}
-                    handleUpdate={handleUpdate}
-                    handleDelete={handleDelete}
+                    onFocus={() => send('UPDATE.START', { id })}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                    onEsc={() => send('ABORT')}
+                    isIdle={current.matches('success.idle')}
                   />
                 ))
               }
@@ -185,7 +187,7 @@ const Index = () => {
                 </div>
                 <button
                   className={styles.clearCompletedButton}
-                  disabled={completed === 0}
+                  disabled={completed === 0 || !current.matches('success.idle')}
                   onClick={handleDestroyCompleted}
                 >
                   Clear completed
