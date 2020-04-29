@@ -37,7 +37,7 @@ const TodoItem = ({
     if (title) {
       setInitialTitle(title);
       setTitle(title);
-      handleUpdate({ id, title });
+      handleUpdate({ id, title, complete });
     } else {
       del();
     }
