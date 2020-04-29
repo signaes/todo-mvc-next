@@ -27,7 +27,7 @@ const Index = () => {
     }());
   }, []);
 
-  const { context: { todos, visibility, currentlyUpdatingId } } = current;
+  const { context: { todos, visibility } } = current;
   const visibleTodos = resolveVisible(visibility, todos);
 
   const handleEnter = async (title: string) => {
@@ -83,7 +83,7 @@ const Index = () => {
     send('TOGGLE.ALL');
 
     try {
-      await Todo.updateAll(todos[0].complete);
+      await Todo.updateAll(!todos[0].complete);
       send('SUCCESS')
     } catch (err) {
       console.error(err);
