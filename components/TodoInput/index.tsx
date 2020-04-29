@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, Ref } from 'react';
-import styles from './styles.module.css';
+import styles from './styles.module.scss';
 import { KEYS } from '../../constants';
 
 interface Input {
@@ -20,7 +20,7 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
     onEnter: handleEnter,
     onEsc: handleEsc,
     onFocus: handleFocus,
-    placeholder = 'What needs to be complete?',
+    placeholder = 'What needs to be done?',
   } = props;
   const [value, setValue] = useState(initialValue);
 

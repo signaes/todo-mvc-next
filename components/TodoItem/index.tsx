@@ -1,37 +1,21 @@
+import styles from './styles.module.scss';
+import todoMachine from '../../state/machines/todo';
 import { useState, useRef } from 'react';
 import { useMachine } from '@xstate/react';
-import { Machine } from 'xstate';
+import { Machine, assign } from 'xstate';
 import TodoInput from '../TodoInput';
-
-type CompletionState = 'complete' | 'incomplete';
-
-const COMPLETE: CompletionState = 'complete';
-const INCOMPLETE: CompletionState = 'incomplete';
-
-const setDone: (state: string) => boolean = state => state === INCOMPLETE;
-
-const todoMachine = ({ id, complete }: { id: string; complete: boolean }) => Machine({
-  id,
-  initial: complete ? COMPLETE : INCOMPLETE,
-  states: {
-    incomplete: {
-      on: { TOGGLE: COMPLETE }
-    },
-    complete: {
-      on: { TOGGLE: INCOMPLETE }
-    }
-  }
-});
 
 const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus }) => {
   const [ initialTitle, setInitialTitle ] = useState(title);
   const [ currentTitle, setTitle ] = useState(title);
-  const [ state, send ] = useMachine(todoMachine({ id, complete }));
+  const [ current, send ] = useMachine(todoMachine({ id, complete }));
   const [ updating, setUpdating ] = useState(false);
   const inputRef = useRef(null);
+  const { context: { complete: currentComplete } } = current
+
   const toggle = () => {
     send('TOGGLE');
-    handleUpdate({ id, complete: setDone(state.value as string) });
+    handleUpdate({ id, complete: !currentComplete });
   };
   const del = () => handleDelete(id);
   const update = (value) => {
@@ -61,18 +45,13 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
   }
 
   return (
-    <div>
-      { state.value === COMPLETE
-        ? 'Feito'
-        : 'A fazer'
-      }
-      <button onClick={toggle}>
-        Done
-      </button>
-      <div style={{ position: 'relative', height: '2em' }}>
-        <div style={{
-          position: 'absolute',
-          height: '2em',
+    <div className={styles.container}>
+      <div className={styles.completeCheckContainer}>
+        <input id={`completeCheck-${id}`} type="checkbox" onChange={toggle} checked={currentComplete} />
+        <label htmlFor={`completeCheck-${id}`} />
+      </div>
+      <div className={styles.titleContainer}>
+        <div className={styles.titleInputContainer} style={{
           opacity: updating ? '100' : '0',
           pointerEvents: updating ? 'all' : 'none'
         }}>
@@ -86,17 +65,15 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
             ref={inputRef}
           />
         </div>
-        <div onClick={startUpdating} style={{
-          position: 'absolute',
-          height: '2em',
+        <div className={styles.titleTextContainer} onClick={startUpdating} style={{
           opacity: updating ? '0' : '100',
           pointerEvents: updating ? 'none' : 'all'
         }}>
           <span>{ currentTitle }</span>
         </div>
       </div>
-      <button onClick={del}>
-        Delete todo
+      <button className={styles.destroyButton} onClick={del}>
+        ×
       </button>
     </div>
   );

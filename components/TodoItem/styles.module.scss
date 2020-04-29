@@ -1,0 +1,79 @@
+.container {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  position: relative;
+  border-bottom: 1px solid #ededed;
+  padding: 0 .6em;
+
+  .destroyButton {
+    display: none;
+  }
+
+  &:hover {
+    .destroyButton {
+      display: block;
+    }
+  }
+}
+
+.completeCheckContainer {
+  position: relative;
+
+  input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  input:checked + label {
+    &:after{
+      color: #59d4a1;
+    }
+  }
+
+  label {
+    height: 24px;
+    width: 24px;
+    border: 1px solid #ededed;
+    display: block;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+
+    &:after {
+      content: '┘';
+      transform: rotate(45deg);
+      position: absolute;
+      color: #fff;
+      font-size: 20px;
+      top: 5px;
+      left: 4px;
+    }
+  }
+}
+
+.titleContainer {
+  flex: 1;
+  position: relative;
+  padding: .6em;
+  height: 26px;
+  line-height: 1.2;
+  font-size: 20px;
+  padding-left: 1.2em;
+}
+
+.titleInputContainer {
+  position: absolute;
+}
+
+.titleTextContainer {
+  position: absolute;
+}
+
+.destroyButton {
+  color: #bd724a;
+  border: 0;
+  outline: none;
+  background-color: transparent;
+  font-size: 24px;
+}

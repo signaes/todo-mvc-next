@@ -1,0 +1,12 @@
+.input {
+  border: none;
+  outline: 0;
+  width: 100%;
+  font-weight: 100;
+  font-family: "Helvetica neue", Helvetica, Arial, sans;
+
+  &::placeholder {
+    font-style: italic;
+    color: darkgray;
+  }
+}

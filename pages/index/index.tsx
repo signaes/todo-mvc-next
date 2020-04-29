@@ -1,4 +1,4 @@
-import styles from './styles.module.css';
+import styles from './styles.module.scss';
 import { useState, useEffect } from 'react'
 import { useMachine } from '@xstate/react'
 import Head from 'next/head'
@@ -28,7 +28,6 @@ const Index = () => {
   }, []);
 
   const { context: { todos, visibility } } = current;
-
   const visibleTodos = resolveVisible(visibility, todos);
 
   const handleEnter = async (title: string) => {
@@ -63,6 +62,7 @@ const Index = () => {
   };
 
   const handleUpdate = async ({ id, title, complete }) => {
+    send('UPDATE.START');
     send('UPDATE', { id, title, complete });
 
     try {
@@ -83,6 +83,9 @@ const Index = () => {
   const showActive = handleVisibility('ACTIVE');
   const showComplete = handleVisibility('COMPLETE');
 
+  const remaining = todos.filter(todo => !todo.complete).length;
+  const completed = todos.filter(todo => todo.complete).length;
+
   return (
     <>
       <Head>
@@ -91,47 +94,62 @@ const Index = () => {
       </Head>
       <div>
         <h1>Todos</h1>
-        <TodoInput onEnter={handleEnter} />
-        { current.matches('loading') && 'Loading' }
-        { current.matches('failure') && 'Something went wrong' }
-        { current.matches('success') && (
-          <div>
-            {
-              visibleTodos.map(({ id, title, complete }: TodoInterface, idx) => (
-                <TodoItem
-                  key={id}
-                  id={id}
-                  title={title}
-                  complete={complete}
-                  handleFocus={() => send('UPDATE.START')}
-                  handleUpdate={handleUpdate}
-                  handleDelete={handleDelete}
-                />
-              ))
-            }
-            <div>
-              <button
-                onClick={showAll}
-                disabled={!current.matches('success.idle')}
-              >
-                Show all
-              </button>
-              <button
-                onClick={showActive}
-                disabled={!current.matches('success.idle')}
-              >
-                Show active
-              </button>
-              <button
-                onClick={showComplete}
-                disabled={!current.matches('success.idle')}
-              >
-                Show complete
-              </button>
+        <div className={styles.container}>
+          <div className={styles.header}>
+            <div className={styles.toggleAllContainer}>
+              <input id="toggleAll" type="checkbox" onChange={e => console.log(e.target.checked)} />
+              <label htmlFor="toggleAll" />
             </div>
+            <TodoInput onEnter={handleEnter} />
           </div>
-        )}
+          { current.matches('loading') && 'Loading' }
+          { current.matches('failure') && 'Something went wrong' }
+          { current.matches('success') && (
+            <section>
+              {
+                visibleTodos.map(({ id, title, complete }: TodoInterface, idx) => (
+                  <TodoItem
+                    key={id}
+                    id={id}
+                    title={title}
+                    complete={complete}
+                    handleFocus={() => send('UPDATE.START')}
+                    handleUpdate={handleUpdate}
+                    handleDelete={handleDelete}
+                  />
+                ))
+              }
+              <footer className={styles.footer}>
+                <span>{ todos.filter(todo => !todo.complete).length } items left</span>
+                <div className={styles.filters}>
+                  <button
+                    data-selected={visibility === 'SHOW.ALL'}
+                    onClick={showAll}
+                    disabled={!current.matches('success.idle')}
+                  >
+                    All
+                  </button>
+                  <button
+                    data-selected={visibility === 'SHOW.ACTIVE'}
+                    onClick={showActive}
+                    disabled={!current.matches('success.idle')}
+                  >
+                    Active
+                  </button>
+                  <button
+                    data-selected={visibility === 'SHOW.CURRENT'}
+                    onClick={showComplete}
+                    disabled={!current.matches('success.idle')}
+                  >
+                    Completed
+                  </button>
+                </div>
+                <button className={styles.clearCompletedButton} disabled={completed === 0} >Clear completed</button>
+              </footer>
+            </section>
+          )}
 
+        </div>
       </div>
     </>
   );
