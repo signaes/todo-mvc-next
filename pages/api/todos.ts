@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuid } from 'uuid';
 import { TodoInterface } from '../../models/todo';
-import { DATA_FILE_PATH, REQUEST_METHOD } from '../../constants';
-import { readFile, writeFile, message } from '../../utils';
-import { getTodos, addNewTodo } from '../../services/todos';
+import { REQUEST_METHOD } from '../../constants';
+import { message } from '../../utils';
+import { getTodos, addNewTodo, updateAllTodos } from '../../services/todos';
 
 const get = async (res: NextApiResponse<string>) => {
   try {
@@ -36,6 +36,20 @@ const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface>) =>
 
 }
 
+const patch = async (req: NextApiRequest, res: NextApiResponse) => {
+  const { body: { complete } } = req;
+
+  try {
+    await updateAllTodos(complete);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.status(204).end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).end();
+  }
+}
+
 export default (req: NextApiRequest, res: NextApiResponse) => {
   switch (req.method) {
     case REQUEST_METHOD.POST:
@@ -43,6 +57,10 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
       break;
     case REQUEST_METHOD.GET:
       get(res);
+      break;
+    case REQUEST_METHOD.PUT:
+    case REQUEST_METHOD.PATCH:
+      patch(req, res);
       break;
     default:
       res.status(405).end(message.methodNotAllowed(req.method));

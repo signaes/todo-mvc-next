@@ -84,7 +84,7 @@ const todosMachine = Machine({
               target: 'removeItem',
               actions: assign(removeItemAction)
             },
-            'UPDATE.START': 'updateItem',
+            'UPDATE.START': 'update',
             'SHOW.ALL': {
               target: 'showAll',
               actions: assign(context => {
@@ -126,7 +126,7 @@ const todosMachine = Machine({
             'SUCCESS': 'idle'
           }
         },
-        updateItem: {
+        update: {
           on: {
             'FAIL': 'idle',
             'SUCCESS': 'idle',
@@ -135,7 +135,7 @@ const todosMachine = Machine({
               actions: assign(removeItemAction)
             },
             'UPDATE': {
-              target: 'updateItem',
+              target: 'update',
               actions: assign((context, { id, title, complete }) => {
                 const update = todo => {
                   if (todo.id !== id) {
@@ -151,6 +151,29 @@ const todosMachine = Machine({
                 }
               })
             },
+            'TOGGLE.ALL': {
+              target: 'idle',
+              actions: assign(context => {
+                const { todos } = context
+                const someIncomplete = todos.some(todo => todo.complete === false)
+
+                return {
+                  ...context,
+                  todos: someIncomplete
+                    ? todos.map(todo => ({ ...todo, complete: true }))
+                    : todos.map(todo => ({ ...todo, complete: false }))
+                }
+              })
+            },
+            'DESTROY.COMPLETED': {
+              target: 'idle',
+              actions: assign(context => {
+                return {
+                  ...context,
+                  todos: context.todos.filter(todo => todo.complete === false)
+                }
+              })
+            }
           }
         },
         showAll: {

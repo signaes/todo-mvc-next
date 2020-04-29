@@ -21,3 +21,27 @@ export const addNewTodo = async (todoTitle) => {
     throw new Error(err);
   }
 }
+export const updateAllTodos = async (complete) => {
+  try {
+    const data = await getTodos();
+    const newData = JSON.parse(data).map(item => ({ ...item, complete }));
+
+    await writeFile(DATA_FILE_PATH, JSON.stringify(newData));
+  } catch (err) {
+    console.error(err);
+
+    throw new Error(err);
+  }
+}
+export const destroyCompleted = async () => {
+  try {
+    const data = await getTodos();
+    const newData = JSON.parse(data).filter(item => item.complete === false);
+
+    await writeFile(DATA_FILE_PATH, JSON.stringify(newData));
+  } catch (err) {
+    console.error(err);
+
+    throw new Error(err);
+  }
+}

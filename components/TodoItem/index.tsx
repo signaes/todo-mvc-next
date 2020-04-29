@@ -1,21 +1,15 @@
 import styles from './styles.module.scss';
-import todoMachine from '../../state/machines/todo';
 import { useState, useRef } from 'react';
-import { useMachine } from '@xstate/react';
-import { Machine, assign } from 'xstate';
 import TodoInput from '../TodoInput';
 
 const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus }) => {
   const [ initialTitle, setInitialTitle ] = useState(title);
   const [ currentTitle, setTitle ] = useState(title);
-  const [ current, send ] = useMachine(todoMachine({ id, complete }));
   const [ updating, setUpdating ] = useState(false);
   const inputRef = useRef(null);
-  const { context: { complete: currentComplete } } = current
 
   const toggle = () => {
-    send('TOGGLE');
-    handleUpdate({ id, complete: !currentComplete });
+    handleUpdate({ id, complete: !complete });
   };
   const del = () => handleDelete(id);
   const update = (value) => {
@@ -47,7 +41,7 @@ const TodoItem = ({ id, title, complete, handleDelete, handleUpdate, handleFocus
   return (
     <div className={styles.container}>
       <div className={styles.completeCheckContainer}>
-        <input id={`completeCheck-${id}`} type="checkbox" onChange={toggle} checked={currentComplete} />
+        <input id={`completeCheck-${id}`} type="checkbox" onChange={toggle} checked={complete} />
         <label htmlFor={`completeCheck-${id}`} />
       </div>
       <div className={styles.titleContainer}>

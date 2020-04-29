@@ -74,6 +74,40 @@ const Index = () => {
     }
   };
 
+  const handleToggleAll = async () => {
+    if (todos.length === 0) {
+      return;
+    }
+
+    send('UPDATE.START');
+    send('TOGGLE.ALL');
+
+    try {
+      await Todo.updateAll(todos[0].complete);
+      send('SUCCESS')
+    } catch (err) {
+      console.error(err);
+      send('FAIL', { error: err });
+    }
+  }
+
+  const handleDestroyCompleted = async () => {
+    if (todos.length === 0) {
+      return;
+    }
+
+    send('UPDATE.START');
+    send('DESTROY.COMPLETED');
+
+    try {
+      await Todo.destroyCompleted();
+      send('SUCCESS');
+    } catch (err) {
+      console.error(err);
+      send('FAIL', { error: 'err' });
+    }
+  }
+
   const handleVisibility = (type) => () => {
     send(`SHOW.${type}`);
     send('SUCCESS');
@@ -97,7 +131,12 @@ const Index = () => {
         <div className={styles.container}>
           <div className={styles.header}>
             <div className={styles.toggleAllContainer}>
-              <input id="toggleAll" type="checkbox" onChange={e => console.log(e.target.checked)} />
+              <input
+                id="toggleAll"
+                type="checkbox"
+                checked={!todos.some(todo => todo.complete === false)}
+                onChange={handleToggleAll}
+              />
               <label htmlFor="toggleAll" />
             </div>
             <TodoInput onEnter={handleEnter} />
@@ -144,7 +183,13 @@ const Index = () => {
                     Completed
                   </button>
                 </div>
-                <button className={styles.clearCompletedButton} disabled={completed === 0} >Clear completed</button>
+                <button
+                  className={styles.clearCompletedButton}
+                  disabled={completed === 0}
+                  onClick={handleDestroyCompleted}
+                >
+                  Clear completed
+                </button>
               </footer>
             </section>
           )}

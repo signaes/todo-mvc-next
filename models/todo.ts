@@ -37,7 +37,7 @@ export default class Todo {
     }
   }
 
-public static async update({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
+  public static async update({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
     try {
       const { data } = await axios.patch(`/api/todo/${id}`, { title, complete });
 
@@ -53,6 +53,24 @@ public static async update({ id, title, complete }: { id: string; title?: string
       const { data } = await axios.delete(`/api/todo/${id}`);
 
       return data;
+    } catch (err) {
+      console.error(err);
+      return err;
+    }
+  }
+
+  public static async updateAll(complete: boolean) {
+    try {
+      await axios.patch('api/todos', { complete });
+    } catch (err) {
+      console.error(err);
+      return err;
+    }
+  }
+
+  public static async destroyCompleted() {
+    try {
+      await axios.delete('api/todos/completed');
     } catch (err) {
       console.error(err);
       return err;
