@@ -1,4 +1,4 @@
-import { Machine, assign } from 'xstate'
+import { Machine, assign, spawn, sendParent } from 'xstate'
 
 export const resolveVisible = (visibility, todos) => {
   switch (visibility) {
@@ -19,16 +19,58 @@ const removeItemAction = (context, event) => {
   return {
     ...context,
     todos,
-    visibleTodos: resolveVisible(context.visibility, todos)
   }
 }
 
-const clearCurrentlyUpdating = context => {
-  return {
-    ...context,
-    currentlyUpdatingId: null
+const todoMachine = Machine({
+  id: 'todoMachine',
+  initial: 'idle',
+  context: {
+    complete: false,
+    editing: false,
+    title: ''
+  },
+  states: {
+    idle: {
+      on: {
+        TOGGLE: {
+          target: 'idle',
+          actions: assign(context => ({
+            ...context,
+            complete: !context.complete
+          }))
+        },
+        EDIT: {
+          target: 'editing',
+          actions: sendParent('UPDATE.START')
+        },
+      },
+      states: {
+        hist: {
+          history: true
+        }
+      }
+    },
+    editing: {
+      on: {
+        'EDITING.COMPLETE': {
+          target: 'idle',
+          actions: [
+            assign((context, event) => ({
+              ...context,
+              title: event.title
+            })),
+            sendParent('SUCCESS')
+          ]
+        },
+        ABORT: {
+          target: 'idle',
+          actions: sendParent('ABORT')
+        }
+      }
+    }
   }
-}
+})
 
 const todosMachine = Machine({
   id: 'todos',
@@ -39,7 +81,6 @@ const todosMachine = Machine({
     // states: 'SHOW.ALL', 'SHOW.ACTIVE', 'SHOW.COMPLETE'
     visibility: 'SHOW.ALL',
     error: null,
-    currentlyUpdatingId: null
   },
   states: {
     idle: {
@@ -50,16 +91,21 @@ const todosMachine = Machine({
     loading: {
       on: {
         RESOLVE: {
-          target: 'success.idle',
+          target: 'success',
           actions: assign((context, { todos }) => {
             return {
               ...context,
-              todos,
-              visibleTodos: todos
+              todos: todos.map(todo => ({
+                ...todo,
+                ref: spawn(todoMachine.withContext(todo), todo.id)
+              })),
             }
           })
         },
         REJECT: 'failure'
+      },
+      meta: {
+        message: 'Loading'
       }
     },
     failure: {
@@ -70,152 +116,163 @@ const todosMachine = Machine({
             retries: (context, event) => context.retries + 1
           })
         }
+      },
+      meta: {
+        message: 'Something went wrong'
       }
     },
     success: {
+      type: 'parallel',
       states: {
-        idle: {
-          on: {
-            'ADD': {
-              target: 'addItem',
-              actions: assign((context, event) => {
-                const todos = [...context.todos, event.todo]
+        ui: {
+          initial: 'idle',
+          states: {
+            idle: {
+              on: {
+                'ADD': {
+                  target: 'addItem',
+                  actions: assign((context, event) => {
+                    const todos = [...context.todos, {
+                      ...event.todo,
+                      ref: spawn(todoMachine.withContext(event.todo), event.todo.id)
+                    }]
 
-                return {
-                  ...context,
-                  todos,
-                  visibleTodos: resolveVisible(context.visibility, todos)
+                    return {
+                      ...context,
+                      todos,
+                    }
+                  })
+                },
+                'REMOVE': {
+                  target: 'removeItem',
+                  actions: assign(removeItemAction)
+                },
+                'UPDATE.START': {
+                  target: 'update',
+                  actions: assign((context, event) => {
+                    return {
+                      ...context,
+                    }
+                  })
+                },
+                'SHOW.ALL': {
+                  target: 'showAll',
+                  actions: assign(context => {
+                    return {
+                      ...context,
+                      visibility: 'SHOW.ALL'
+                    }
+                  })
+                },
+                'SHOW.ACTIVE': {
+                  target: 'showActive',
+                  actions: assign(context => {
+                    return {
+                      ...context,
+                      visibility: 'SHOW.ACTIVE'
+                    }
+                  })
+                },
+                'SHOW.COMPLETE': {
+                  target: 'showComplete',
+                  actions: assign(context => {
+                    return {
+                      ...context,
+                      visibility: 'SHOW.COMPLETE'
+                    }
+                  })
                 }
-              })
+              }
             },
-            'REMOVE': {
-              target: 'removeItem',
-              actions: assign(removeItemAction)
+            addItem: {
+              on: {
+                'FAIL': 'idle',
+                'SUCCESS': 'idle',
+              }
             },
-            'UPDATE.START': {
-              target: 'update',
-              actions: assign((context, event) => {
-                return {
-                  ...context,
-                  currentlyUpdatingId: event.id || null
+            removeItem: {
+              on: {
+                'FAIL': 'idle',
+                'SUCCESS': 'idle'
+              }
+            },
+            update: {
+              on: {
+                'FAIL': {
+                  target: 'idle',
+                },
+                'SUCCESS': {
+                  target: 'idle',
+                },
+                'ABORT': {
+                  target: 'idle',
+                },
+                'REMOVE': {
+                  target: 'removeItem',
+                  actions: assign(removeItemAction)
+                },
+                'TOGGLE.ALL': {
+                  target: 'idle',
+                  actions: assign(context => {
+                    const { todos } = context
+                    const someIncomplete = todos.some(todo => todo.complete === false)
+
+                    return {
+                      ...context,
+                      todos: someIncomplete
+                      ? todos.map(todo => ({ ...todo, complete: true }))
+                      : todos.map(todo => ({ ...todo, complete: false }))
+                    }
+                  })
+                },
+                'DESTROY.COMPLETED': {
+                  target: 'idle',
+                  actions: assign(context => {
+                    return {
+                      ...context,
+                      todos: context.todos.filter(todo => todo.complete === false)
+                    }
+                  })
                 }
-              })
+              }
             },
-            'SHOW.ALL': {
-              target: 'showAll',
-              actions: assign(context => {
-                return {
-                  ...context,
-                  visibility: 'SHOW.ALL'
-                }
-              })
+            showAll: {
+              on: {
+                'SUCCESS': 'idle'
+              }
             },
-            'SHOW.ACTIVE': {
-              target: 'showActive',
-              actions: assign(context => {
-                return {
-                  ...context,
-                  visibility: 'SHOW.ACTIVE'
-                }
-              })
+            showActive: {
+              on: {
+                'SUCCESS': 'idle'
+              }
             },
-            'SHOW.COMPLETE': {
-              target: 'showComplete',
-              actions: assign(context => {
-                return {
-                  ...context,
-                  visibility: 'SHOW.COMPLETE'
-                }
-              })
+            showComplete: {
+              on: {
+                'SUCCESS': 'idle'
+              }
             }
           }
         },
-        addItem: {
-          on: {
-            'FAIL': 'idle',
-            'SUCCESS': 'idle',
-          }
-        },
-        removeItem: {
-          on: {
-            'FAIL': 'idle',
-            'SUCCESS': 'idle'
-          }
-        },
-        update: {
-          on: {
-            'FAIL': {
-              target: 'idle',
-              actions: assign(clearCurrentlyUpdating)
+        sync: {
+          initial: 'idle',
+          states: {
+            idle: {
+              on: {
+                SYNC: 'loading'
+              }
             },
-            'SUCCESS': {
-              target: 'idle',
-              actions: assign(clearCurrentlyUpdating)
+            loading: {
+              on: {
+                SUCCESS: 'idle',
+                FAILURE: 'retry'
+              }
             },
-            'ABORT': {
-              target: 'idle',
-              actions: assign(clearCurrentlyUpdating)
-            },
-            'REMOVE': {
-              target: 'removeItem',
-              actions: assign(removeItemAction)
-            },
-            'UPDATE': {
-              target: 'update',
-              actions: assign((context, { id, title, complete }) => {
-                const update = todo => {
-                  if (todo.id !== id) {
-                    return todo;
-                  }
-
-                  return { id, title, complete }
-                }
-
-                return {
-                  ...context,
-                  todos: context.todos.map(update),
-                  currentlyUpdatingId: null
-                }
-              })
-            },
-            'TOGGLE.ALL': {
-              target: 'idle',
-              actions: assign(context => {
-                const { todos } = context
-                const someIncomplete = todos.some(todo => todo.complete === false)
-
-                return {
-                  ...context,
-                  todos: someIncomplete
-                    ? todos.map(todo => ({ ...todo, complete: true }))
-                    : todos.map(todo => ({ ...todo, complete: false }))
-                }
-              })
-            },
-            'DESTROY.COMPLETED': {
-              target: 'idle',
-              actions: assign(context => {
-                return {
-                  ...context,
-                  todos: context.todos.filter(todo => todo.complete === false)
-                }
-              })
+            retry: {
+              on: {
+                SUCCESS: 'idle',
+                FAILURE: 'retry'
+              }
             }
-          }
-        },
-        showAll: {
-          on: {
-            'SUCCESS': 'idle'
-          }
-        },
-        showActive: {
-          on: {
-            'SUCCESS': 'idle'
-          }
-        },
-        showComplete: {
-          on: {
-            'SUCCESS': 'idle'
           }
         }
       }

@@ -1,63 +1,55 @@
 import styles from './styles.module.scss';
+import { useService } from '@xstate/react'
+import { KEYS } from '../../constants';
 import { useState, useRef } from 'react';
 import TodoInput from '../TodoInput';
 
 const TodoItem = ({
-  id,
-  title,
-  complete,
   onDelete: handleDelete,
   onUpdate: handleUpdate,
-  onEsc,
-  onFocus: handleFocus,
-  isIdle,
-  isUpdating
+  service,
 }: {
-  id: string;
-  title: string;
-  complete: boolean;
   onDelete: (id: string) => void;
   onUpdate: (item: { id: string, title?: string, complete?: boolean }) => void;
-  onEsc: () => void;
-  onFocus: () => void;
-  isIdle: boolean;
-  isUpdating: boolean;
+  service: any;
 }) => {
-  const [ initialTitle, setInitialTitle ] = useState(title);
-  const [ currentTitle, setTitle ] = useState(title);
+  const [ current, send ] = useService(service);
+  const { context: { title, complete, id } } = current as any;
+  const [ tempTitle, setTempTitle ] = useState(title);
   const inputRef = useRef(null);
 
   const toggle = () => {
+    send('TOGGLE');
     handleUpdate({ id, complete: !complete });
   };
   const del = () => handleDelete(id);
   const update = (value) => {
     const title = value.trim();
 
-    if (title) {
-      setInitialTitle(title);
-      setTitle(title);
-      handleUpdate({ id, title, complete });
-    } else {
+    if (!title) {
       del();
     }
+
+    send('EDITING.COMPLETE', { title });
+    setTempTitle(title);
+    handleUpdate({ id, title, complete });
   };
   const startUpdating = e => {
-    if (!isIdle) {
-      return;
-    }
+    send('EDIT');
 
     if (inputRef && inputRef.current) {
       inputRef.current.focus();
     }
   };
-  const handleChange = value => setTitle(value);
+  const handleChange = value => {
+    setTempTitle(value.trim());
+  };
   const handleEsc = () => {
-    setTitle(initialTitle);
-    onEsc();
+    setTempTitle(title);
+    send('ABORT');
   }
 
-  const checkboxContainerClassName = isUpdating
+  const checkboxContainerClassName = current.matches('editing')
     ? styles.completeCheckContainerDisabled
     : styles.completeCheckContainer
 
@@ -71,7 +63,7 @@ const TodoItem = ({
         <input
           id={`completeCheck-${id}`}
           type="checkbox"
-          disabled={!isIdle || isUpdating}
+          disabled={current.matches('editing')}
           onChange={toggle}
           checked={complete}
         />
@@ -80,31 +72,36 @@ const TodoItem = ({
       <div
         onClick={startUpdating}
         className={styles.titleContainer}
-        data-disabled={!isUpdating && !isIdle}
+        data-disabled={current.matches('editing')}
       >
         <div className={styles.titleInputContainer} style={{
-          opacity: isUpdating ? '100' : '0',
-          pointerEvents: isUpdating ? 'all' : 'none'
+          opacity: current.matches('editing') ? '100' : '0',
+          pointerEvents: current.matches('editing') ? 'all' : 'none'
         }}>
-          <TodoInput
-            initialValue={currentTitle}
-            currentValue={currentTitle}
-            onFocus={handleFocus}
-            onChange={handleChange}
-            onEnter={update}
-            onEsc={handleEsc}
+          <input
+            value={tempTitle}
+            onChange={({ target: { value } }) => handleChange(value)}
+            onKeyUp={(e) => {
+              switch (e.key) {
+                case KEYS.ENTER:
+                  update(tempTitle);
+                  break;
+                case KEYS.ESC:
+                  handleEsc();
+              }
+            }}
             onBlur={handleEsc}
             ref={inputRef}
           />
         </div>
         <div className={styles.titleTextContainer} style={{
-          opacity: isUpdating ? '0' : '100',
-          pointerEvents: isUpdating ? 'none' : 'all'
+          opacity: current.matches('editing') ? '0' : '100',
+          pointerEvents: current.matches('editing') ? 'none' : 'all'
         }}>
-          <span>{ currentTitle }</span>
+          <span>{ title }</span>
         </div>
       </div>
-      <button className={styles.destroyButton} onClick={del} disabled={!isIdle}>
+      <button className={styles.destroyButton} onClick={del} disabled={!current.matches('idle')}>
         ×
       </button>
     </div>

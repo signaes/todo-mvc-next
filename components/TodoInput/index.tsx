@@ -48,8 +48,8 @@ const TodoInput = React.forwardRef((props: Input, ref: React.Ref<HTMLInputElemen
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
-      onKeyUp={({ key }) => {
-        switch (key) {
+      onKeyUp={(e) => {
+        switch (e.key) {
           case KEYS.ENTER:
             handleEnter(currentValue !== null && currentValue !== undefined ? currentValue : value);
             setValue(currentValue !== null && currentValue !== undefined ? currentValue : initialValue);

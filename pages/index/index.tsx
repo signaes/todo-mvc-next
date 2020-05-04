@@ -27,7 +27,7 @@ const Index = () => {
     }());
   }, []);
 
-  const { context: { todos, visibility, currentlyUpdatingId } } = current;
+  const { context: { todos, visibility, currentlyUpdatingId } } = current as any;
   const visibleTodos = resolveVisible(visibility, todos);
 
   const handleEnter = async (title: string) => {
@@ -146,18 +146,12 @@ const Index = () => {
           { current.matches('success') && (
             <section>
               {
-                visibleTodos.map(({ id, title, complete }: TodoInterface, idx) => (
+                visibleTodos.map(({ id, title, complete, ref }: TodoInterface, idx) => (
                   <TodoItem
                     key={id}
-                    id={id}
-                    title={title}
-                    complete={complete}
-                    onFocus={() => send('UPDATE.START', { id })}
                     onUpdate={handleUpdate}
                     onDelete={handleDelete}
-                    onEsc={() => send('ABORT')}
-                    isIdle={current.matches('success.idle')}
-                    isUpdating={currentlyUpdatingId === id}
+                    service={ref}
                   />
                 ))
               }
@@ -167,28 +161,28 @@ const Index = () => {
                   <button
                     data-selected={visibility === 'SHOW.ALL'}
                     onClick={showAll}
-                    disabled={!current.matches('success.idle')}
+                    disabled={!current.matches('success.ui.idle')}
                   >
                     All
                   </button>
                   <button
                     data-selected={visibility === 'SHOW.ACTIVE'}
                     onClick={showActive}
-                    disabled={!current.matches('success.idle')}
+                    disabled={!current.matches('success.ui.idle')}
                   >
                     Active
                   </button>
                   <button
                     data-selected={visibility === 'SHOW.COMPLETE'}
                     onClick={showComplete}
-                    disabled={!current.matches('success.idle')}
+                    disabled={!current.matches('success.ui.idle')}
                   >
                     Completed
                   </button>
                 </div>
                 <button
                   className={styles.clearCompletedButton}
-                  disabled={completed === 0 || !current.matches('success.idle')}
+                  disabled={completed === 0 || !current.matches('success.ui.idle')}
                   onClick={handleDestroyCompleted}
                 >
                   Clear completed
