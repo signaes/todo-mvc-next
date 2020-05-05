@@ -1,10 +1,13 @@
 import axios from 'axios';
 import { v4 as uuid } from 'uuid';
 
-export interface TodoInterface {
+export interface TodoData {
   id: string;
   title: string;
   complete: boolean;
+}
+
+export interface TodoInterface extends TodoData {
   ref: any;
 }
 

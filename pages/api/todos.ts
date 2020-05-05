@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuid } from 'uuid';
-import { TodoInterface } from '../../models/todo';
+import { TodoData } from '../../models/todo';
 import { REQUEST_METHOD } from '../../constants';
 import { message } from '../../utils';
 import { getTodos, addNewTodo, updateAllTodos } from '../../services/todos';
@@ -17,7 +17,7 @@ const get = async (res: NextApiResponse<string>) => {
   }
 };
 
-const post = async (req: NextApiRequest, res: NextApiResponse<TodoInterface>) => {
+const post = async (req: NextApiRequest, res: NextApiResponse<TodoData>) => {
   const { body: { title } } = req;
 
   if (!title) {

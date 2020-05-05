@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { TodoInterface } from '../../../models/todo';
+import { TodoData } from '../../../models/todo';
 import { DATA_FILE_PATH, REQUEST_METHOD } from '../../../constants';
 import { readFile, writeFile, message } from '../../../utils';
 
@@ -7,8 +7,8 @@ const patch = async ({ id, title, complete }: { id: string, title?: string, comp
   try {
     const data = await readFile(DATA_FILE_PATH);
     const newTitle = title && title.trim();
-    const updatedData: TodoInterface[] = JSON.parse(data)
-      .map((item: TodoInterface) => {
+    const updatedData: TodoData[] = JSON.parse(data)
+      .map((item: TodoData) => {
         if (item.id === id) {
           return {
             ...item,
@@ -31,8 +31,8 @@ const patch = async ({ id, title, complete }: { id: string, title?: string, comp
 const del = async (id: string, res: NextApiResponse) => {
   try {
     const data = await readFile(DATA_FILE_PATH);
-    const updatedData: TodoInterface[] = JSON.parse(data)
-      .filter((item: TodoInterface) => item.id !== id);
+    const updatedData: TodoData[] = JSON.parse(data)
+      .filter((item: TodoData) => item.id !== id);
     await writeFile(DATA_FILE_PATH, JSON.stringify(updatedData));
 
     res.status(204).end();
