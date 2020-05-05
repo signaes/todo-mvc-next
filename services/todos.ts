@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import Todo, { TodoInterface } from '../models/todo';
+import Todo, { TodoData } from '../models/todo';
 import { DATA_FILE_PATH, REQUEST_METHOD } from '../constants';
 import { readFile, writeFile, message } from '../utils';
 
@@ -8,8 +8,8 @@ export const addNewTodo = async (todoTitle) => {
   try {
     const data = await getTodos();
     const todo = new Todo(todoTitle);
-    const { id, title, complete }: TodoInterface = todo;
-    const newData: TodoInterface[] = JSON.parse(data);
+    const { id, title, complete }: TodoData = todo;
+    const newData: TodoData[] = JSON.parse(data);
     newData.push({ id, title, complete });
 
     await writeFile(DATA_FILE_PATH, JSON.stringify(newData));
