@@ -19,65 +19,27 @@ export default class Todo {
     this.id = uuid();
   }
 
-  public static async all() {
-    try {
-      const { data } = await axios.get('/api/todos');
-
-      return data;
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+  public static all() {
+    return axios.get('/api/todos');
   }
 
-  public static async add(title: string) {
-    try {
-      const { data } = await axios.post('/api/todos', { title });
-
-      return data;
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+  public static add(title: string) {
+    return axios.post('/api/todos', { title });
   }
 
-  public static async update({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
-    try {
-      const { data } = await axios.patch(`/api/todo/${id}`, { title, complete });
-
-      return data;
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+  public static update({ id, title, complete }: { id: string; title?: string, complete?: boolean }) {
+    return axios.patch(`/api/todo/${id}`, { title, complete });
   }
 
-  public static async destroy(id: string) {
-    try {
-      const { data } = await axios.delete(`/api/todo/${id}`);
-
-      return data;
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+  public static destroy(id: string) {
+    return axios.delete(`/api/todo/${id}`);
   }
 
   public static async updateAll(complete: boolean) {
-    try {
-      await axios.patch('api/todos', { complete });
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+    return axios.patch('api/todos', { complete });
   }
 
   public static async destroyCompleted() {
-    try {
-      await axios.delete('api/todos/completed');
-    } catch (err) {
-      console.error(err);
-      return err;
-    }
+    return await axios.delete('api/todos/completed');
   }
 }

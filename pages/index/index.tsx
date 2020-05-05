@@ -18,7 +18,7 @@ const Index = () => {
       send('FETCH')
 
       try {
-        const todos = await Todo.all();
+        const { data: todos } = await Todo.all();
         send('RESOLVE', { todos });
       } catch (err) {
         console.error(err);
