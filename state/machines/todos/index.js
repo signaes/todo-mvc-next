@@ -8,10 +8,10 @@ export const resolveVisible = (visibility, todos) => {
       return todos
       break
     case 'SHOW.ACTIVE':
-      return todos.filter(todo => todo.complete === false)
+      return todos.filter(({ ref }) => ref.state.context.complete === false)
       break
     case 'SHOW.COMPLETE':
-      return todos.filter(todo => todo.complete)
+      return todos.filter(({ ref }) => ref.state.context.complete)
   }
 }
 

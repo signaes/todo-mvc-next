@@ -90,14 +90,6 @@ const Index = () => {
 
     send('UPDATE.START');
     send('DESTROY.COMPLETED');
-
-    try {
-      await Todo.destroyCompleted();
-      send('SUCCESS');
-    } catch (err) {
-      console.error(err);
-      send('FAIL', { error: 'err' });
-    }
   }
 
   const handleVisibility = (type) => () => {
@@ -109,8 +101,8 @@ const Index = () => {
   const showActive = handleVisibility('ACTIVE');
   const showComplete = handleVisibility('COMPLETE');
 
-  const remaining = todos.filter(todo => !todo.complete).length;
-  const completed = todos.filter(todo => todo.complete).length;
+  const completed = todos.filter(({ ref }) => ref.state.context.complete);
+  const remaining = todos.length - completed.length;
 
   return (
     <>
@@ -138,7 +130,7 @@ const Index = () => {
           { current.matches('success') && (
             <section>
               {
-                visibleTodos.map(({ id, title, complete, ref }: TodoInterface, idx) => (
+                visibleTodos.map(({ id, ref }: TodoInterface, idx) => (
                   <TodoItem
                     key={id}
                     onUpdate={handleUpdate}
@@ -174,7 +166,7 @@ const Index = () => {
                 </div>
                 <button
                   className={styles.clearCompletedButton}
-                  disabled={completed === 0 || !current.matches('success.ui.idle')}
+                  disabled={completed.length === 0 || !current.matches('success.ui.idle')}
                   onClick={handleDestroyCompleted}
                 >
                   Clear completed
