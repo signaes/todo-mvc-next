@@ -140,7 +140,7 @@ const Index = () => {
                 ))
               }
               <footer className={styles.footer}>
-                <span>{ todos.filter(todo => !todo.complete).length } items left</span>
+                <span>{ remaining } item{ remaining === 1 ? '' : 's' } left</span>
                 <div className={styles.filters}>
                   <button
                     data-selected={visibility === 'SHOW.ALL'}
