@@ -48,6 +48,7 @@ const todosMachine = Machine({
             return {
               ...context,
               todos: todos.map(todo => ({
+                id: todo.id,
                 ref: spawn(todoMachine.withContext(todo), { id: todo.id, sync: true })
               })),
             }
@@ -84,7 +85,7 @@ const todosMachine = Machine({
                   target: 'addItem',
                   actions: assign((context, event) => {
                     const todos = [...context.todos, {
-                      ref: () => spawn(todoMachine.withContext(event.todo), { sync: true })
+                      ref: spawn(todoMachine.withContext(event.todo), { sync: true })
                     }]
 
                     return {
@@ -217,6 +218,20 @@ const todosMachine = Machine({
                       }
                     })
                   ]
+                },
+                'DESTROY.COMPLETED': {
+                  target: 'idle',
+                  actions: [
+                    assign(async () => {
+                      try {
+                        await Todo.destroyCompleted();
+                        send('SUCCESS');
+                      } catch (err) {
+                        console.error(err);
+                        send('FAILURE', { error: 'err' });
+                      }
+                    })
+                  ],
                 }
               }
             },
