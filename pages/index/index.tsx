@@ -81,14 +81,6 @@ const Index = () => {
 
     send('UPDATE.START');
     send('TOGGLE.ALL');
-
-    try {
-      await Todo.updateAll(!todos[0].complete);
-      send('SUCCESS')
-    } catch (err) {
-      console.error(err);
-      send('FAIL', { error: err });
-    }
   }
 
   const handleDestroyCompleted = async () => {

@@ -1,4 +1,6 @@
-import { Machine, assign, spawn, sendParent } from 'xstate'
+import { Machine, assign, spawn, send, sendParent } from 'xstate'
+import Todo from '../../../models/todo'
+import todoMachine from '../todo'
 
 export const resolveVisible = (visibility, todos) => {
   switch (visibility) {
@@ -21,56 +23,6 @@ const removeItemAction = (context, event) => {
     todos,
   }
 }
-
-const todoMachine = Machine({
-  id: 'todoMachine',
-  initial: 'idle',
-  context: {
-    complete: false,
-    editing: false,
-    title: ''
-  },
-  states: {
-    idle: {
-      on: {
-        TOGGLE: {
-          target: 'idle',
-          actions: assign(context => ({
-            ...context,
-            complete: !context.complete
-          }))
-        },
-        EDIT: {
-          target: 'editing',
-          actions: sendParent('UPDATE.START')
-        },
-      },
-      states: {
-        hist: {
-          history: true
-        }
-      }
-    },
-    editing: {
-      on: {
-        'EDITING.COMPLETE': {
-          target: 'idle',
-          actions: [
-            assign((context, event) => ({
-              ...context,
-              title: event.title
-            })),
-            sendParent('SUCCESS')
-          ]
-        },
-        ABORT: {
-          target: 'idle',
-          actions: sendParent('ABORT')
-        }
-      }
-    }
-  }
-})
 
 const todosMachine = Machine({
   id: 'todos',
@@ -96,8 +48,7 @@ const todosMachine = Machine({
             return {
               ...context,
               todos: todos.map(todo => ({
-                ...todo,
-                ref: spawn(todoMachine.withContext(todo), todo.id)
+                ref: spawn(todoMachine.withContext(todo), { id: todo.id, sync: true })
               })),
             }
           })
@@ -133,8 +84,7 @@ const todosMachine = Machine({
                   target: 'addItem',
                   actions: assign((context, event) => {
                     const todos = [...context.todos, {
-                      ...event.todo,
-                      ref: spawn(todoMachine.withContext(event.todo), event.todo.id)
+                      ref: () => spawn(todoMachine.withContext(event.todo), { sync: true })
                     }]
 
                     return {
@@ -148,12 +98,7 @@ const todosMachine = Machine({
                   actions: assign(removeItemAction)
                 },
                 'UPDATE.START': {
-                  target: 'update',
-                  actions: assign((context, event) => {
-                    return {
-                      ...context,
-                    }
-                  })
+                  target: 'update'
                 },
                 'SHOW.ALL': {
                   target: 'showAll',
@@ -215,14 +160,12 @@ const todosMachine = Machine({
                   target: 'idle',
                   actions: assign(context => {
                     const { todos } = context
-                    const someIncomplete = todos.some(todo => todo.complete === false)
+                    const allComplete = todos.filter(({ ref }) => ref.state.context.complete === false).length === 0
+                    const complete = allComplete ? false : true;
 
-                    return {
-                      ...context,
-                      todos: someIncomplete
-                      ? todos.map(todo => ({ ...todo, complete: true }))
-                      : todos.map(todo => ({ ...todo, complete: false }))
-                    }
+                    context.todos.forEach(todo => todo.ref.send({ type: 'UPDATE.COMPLETENESS', complete }));
+
+                    return context
                   })
                 },
                 'DESTROY.COMPLETED': {
@@ -258,7 +201,23 @@ const todosMachine = Machine({
           states: {
             idle: {
               on: {
-                SYNC: 'loading'
+                SYNC: 'loading',
+                'TOGGLE.ALL': {
+                  target: 'idle',
+                  actions: [
+                    assign(async ({ todos }) => {
+                      const complete = todos[0].ref.state.context.complete
+
+                      try {
+                        await Todo.updateAll(complete)
+                        send('SUCCESS')
+                      } catch (err) {
+                        console.error(err);
+                        send('FAILURE', { error: err })
+                      }
+                    })
+                  ]
+                }
               }
             },
             loading: {
