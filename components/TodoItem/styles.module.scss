@@ -50,12 +50,12 @@
 
     &:after {
       content: '┘';
-      transform: rotate(45deg);
+      transform: rotate(40deg);
       position: absolute;
       color: #fff;
       font-size: 20px;
-      top: 5px;
-      left: 4px;
+      top: 7px;
+      left: 2px;
     }
   }
 
@@ -91,6 +91,11 @@
 
 .titleTextContainer {
   position: absolute;
+
+  &[data-complete="true"] {
+    color: #d9d9d9;
+    text-decoration: line-through;
+  }
 }
 
 .destroyButton {

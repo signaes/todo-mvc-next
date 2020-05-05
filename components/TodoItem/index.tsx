@@ -94,10 +94,14 @@ const TodoItem = ({
             ref={inputRef}
           />
         </div>
-        <div className={styles.titleTextContainer} style={{
-          opacity: current.matches('editing') ? '0' : '100',
-          pointerEvents: current.matches('editing') ? 'none' : 'all'
-        }}>
+        <div
+          className={styles.titleTextContainer}
+          style={{
+            opacity: current.matches('editing') ? '0' : '100',
+            pointerEvents: current.matches('editing') ? 'none' : 'all'
+          }}
+          data-complete={complete}
+        >
           <span>{ title }</span>
         </div>
       </div>
